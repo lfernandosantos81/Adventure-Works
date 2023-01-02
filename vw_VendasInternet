@@ -1,0 +1,72 @@
+-- ###############################################
+--   PROJETO DE INTEGRAÇÃO SQL SERVER E EXCEL
+-- ###############################################
+
+-- 1 APRESENTAÇÃO
+-- CONHECENDO O PROJETO DE INTEGRAÇÃO ENTRE SQL SERVER E EXCEL
+
+-- 2 DOWNLOAD DO BANCO DE DADOS ADVENTUREWORKS DW2014
+-- https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver16&tabs=ssms
+
+-- 3 DEFININDO INDICADORES DO PROJETO
+
+-- i) TOTAL DE VENDAS INTERNET POR CATEGORIA DO PRODUTO
+-- ii) RECEITA TOTAL INTERNET POR MES PEDIDO
+-- iii) RECEITA E CUSTO TOTAL VENDAS INTERNET POR PAIS
+-- iv) TOTAL DE VENDAS INTERNET POR SEXO
+-- OBS: O ANO DE ANALISE SERA APENAS 2013 (ANO DO PEDIDO)
+
+SELECT * FROM FactInternetSales
+SELECT * FROM DimProductCategory
+SELECT * FROM DimSalesTerritory
+SELECT * FROM DimCustomer
+
+-- 4 DEFININDO AS TABELAS A SEREM ANALISADAS
+-- TABELA 1: FactInternetSales
+-- TABELA 2: Dimcostumer
+-- TABELA 3: DimSalesTerritory
+-- TABELA 4: DimProductCategory  ***
+-- *** aqui precisaremos fazer um  relacionamento em cadeia
+
+-- 5 DEFININDO AS COLUNAS DA VIEW VENDAS_INTERNET
+-- COLUNAS:
+-- SalesOrderNumber				(TABELA 1: FactInternetSales)
+-- OrderDate					(TABELA 1: FactInternetSales)
+-- EnglishProductCategoryName	(TABELA 4: DimProductCategory)
+-- FirstName + LastName			(TABELA 2: DimCostumer)
+-- Gender						(TABELA 2: DimCostumer)
+-- SalestarritoryCountry		(TABELA 3: DimSalesTerritory)
+-- TotalProductCost				(TABELA 1: FactInternetSales)
+-- SalesAmount					(TABELA 1: FactInternetSales)
+
+-- 6 CRIANDO O CODIGO DA VIEW VENDAS_INTERNET
+
+-- i) TOTAL DE VENDAS INTERNET POR CATEGORIA DO PRODUTO
+-- ii) RECEITA TOTAL INTERNET POR MES PEDIDO
+-- iii) RECEITA E CUSTO TOTAL VENDAS INTERNET POR PAIS
+-- iv) TOTAL DE VENDAS INTERNET POR SEXO
+-- OBS: O ANO DE ANALISE SERA APENAS 2013 (ANO DO PEDIDO)
+
+CREATE OR ALTER VIEW VENDAS_INTERNET AS
+SELECT
+	fis.SalesOrderNumber AS '# Pedido',
+	fis.OrderDate AS 'Data Pedido',
+	dpc.EnglishProductCategoryName AS 'Categoria Produto',
+	dc.FirstName + ' ' + LastName AS 'Nome Cliente',
+	Gender AS 'Sexo',
+	SalesTerritoryCountry AS 'País',
+	fis.OrderQuantity AS 'Qtde. Vendida',
+	fis.TotalProductCost AS 'Custo Venda',
+	fis.SalesAmount 'Receita Venda'
+
+FROM FactInternetSales fis
+INNER JOIN DimProduct dp ON fis.ProductKey = dp.ProductKey
+	INNER JOIN DimProductSubcategory dps ON dp.ProductSubcategoryKey = dps.ProductSubcategoryKey
+		INNER JOIN DimProductCategory dpc ON dps.ProductCategoryKey = dpc.ProductCategoryKey
+INNER JOIN DimCustomer dc ON fis.CustomerKey = dc.CustomerKey
+INNER JOIN DimSalesTerritory dst ON fis.SalesTerritoryKey = dst.SalesTerritoryKey
+
+WHERE YEAR(OrderDate) = 2013
+
+	
+SELECT * FROM VENDAS_INTERNET
